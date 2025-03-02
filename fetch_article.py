@@ -1,12 +1,33 @@
 import requests
 from dotenv import load_dotenv
 import os
+import mysql.connector
 
 load_dotenv()
 
 API_KEY = os.getenv('GUARDIAN_API_KEY')
 ENDPOINT = 'https://content.guardianapis.com/search'
 
+# AWS RDS MySQL configuration
+DB_HOST = os.getenv('DB_HOST')  # RDS endpoint
+DB_USER = os.getenv('DB_USER')  # RDS master username
+DB_PASSWORD = os.getenv('DB_PASSWORD')  # RDS master password
+DB_NAME = os.getenv('DB_NAME', 'articles_db')
+
+# # initialize MySQL database connection
+# def get_db_connection():
+#     try:
+#         conn = mysql.connector.connect(
+#             host=DB_HOST,
+#             user=DB_USER,
+#             password=DB_PASSWORD,
+#             database=DB_NAME
+#         )
+#         return conn
+#     except mysql.connector.Error as e:
+#         print(f"Error connecting to MySQL: {e}")
+#         return None
+    
 # grab data from the guardian api
 def fetch_guardian_articles(query):
     saved_articles = []
