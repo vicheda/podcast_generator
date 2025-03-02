@@ -7,9 +7,10 @@ load_dotenv()
 API_KEY = os.getenv('GUARDIAN_API_KEY')
 ENDPOINT = 'https://content.guardianapis.com/search'
 
-
+# grab data from the guardian api
 def fetch_guardian_articles(query):
     saved_articles = []
+
     try:
         response = requests.get(
             f'{ENDPOINT}?q={query}&api-key={API_KEY}'
