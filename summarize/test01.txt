@@ -1,5 +1,5 @@
 {
   "pathParameters": {
-    "query": "sports"
+    "queryid": 10001
   }
 }
