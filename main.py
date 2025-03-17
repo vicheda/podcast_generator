@@ -32,7 +32,9 @@ class Podcast:
 class Article:
 
   def __init__(self, row):
-    self.scriptkey = row[0]
+    self.articleid = row[0]
+    self.headline = row[1]
+
 
 
 ###################################################################
@@ -354,7 +356,8 @@ def list_articles(baseurl):
       return
 
     for article in articles:
-      print(article.scriptkey)
+      print(" ", article.articleid)
+      print(" ", article.headline)
     #
     return
 
@@ -448,8 +451,22 @@ def fetch_articles(baseurl):
     # get articles
     url = baseurl + "/fetch" + "/" + query
     res = requests.post(url, json={})
-    body = res.json()
 
+    if res.status_code == 200: #success
+      pass
+    else:
+      # failed:
+      print("Failed with status code:", res.status_code)
+      print("url: " + url)
+      if res.status_code == 500:
+        # we'll have an error message
+        body = res.json()
+        print("Error message:", body)
+      #
+      return
+    
+    body = res.json()
+    print("Articles successfully fetched")
   except Exception as e:
     logging.error("**ERROR: get_articles() failed:")
     logging.error("url: " + url)
@@ -487,7 +504,7 @@ def summarize(baseurl):
       return
 
     if res.status_code == 200:
-      print("Summary successfully generated:")
+      print("Summary successfully generated")
       print(res.json())
     else:
       print(f"**ERROR: Failed with status code {res.status_code}")
