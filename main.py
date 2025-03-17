@@ -286,13 +286,18 @@ def fetch_articles(baseurl):
   """
   try:
     query = input("Enter a query (e.g. technology, climate,...)> ")
+
     if query.isdigit():
       print("**ERROR: Invalid query. Please enter a string.")
       return
     
     # get articles
-    articles = fetch_guardian_articles(query)
-    print(articles)
+    url = baseurl + "/fetch" + "/" + query
+    res = requests.post(url)
+    
+    body = res.json()
+    print(body)
+    
   except Exception as e:
     logging.error("**ERROR: get_articles() failed:")
     logging.error("url: " + url)
@@ -318,12 +323,12 @@ def summarize(baseurl):
   try:
     queryid = input("Enter a query ID> ")
 
-    if not queryid.isdigit():
-      print("**ERROR: Invalid query ID. Please enter a numeric value.")
-      return
+    # if not queryid.isdigit():
+    #   print("**ERROR: Invalid query ID. Please enter a numeric value.")
+    #   return
 
-    url = f"{baseurl}/summarize/{queryid}"
-    res = web_service_get(url)
+    url = f"{baseurl}/summarize/{int(queryid)}"
+    res = requests.post(url)
 
     if res is None:
       print("**ERROR: No response from the web service.")
