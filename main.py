@@ -24,6 +24,16 @@ class Query:
     self.querytext = row[1]
     self.status = row[2]
 
+class Podcast:
+
+  def __init__(self, row):
+    self.audiokey = row[0]
+
+class Article:
+
+  def __init__(self, row):
+    self.scriptkey = row[0]
+
 
 ###################################################################
 #
@@ -107,12 +117,13 @@ def prompt():
     print(">> Enter a command:")
     print("   0 => end")
     print("   1 => list queries")
-    print("   2 => list audio files")
-    print("   3 => list bucket keys")
+    print("   2 => list podcasts")
+    print("   3 => list articles")
     print("   4 => reset database")
-    print("   5 => get articles")
-    print("   6 => summarize articles")
-    print("   7 => make podcast")
+    print("   5 => fetch and generate podcast")
+    print("   6 => fetch articles")
+    print("   7 => summarize articles")
+    print("   8 => make podcast")
 
     cmd = input()
 
@@ -203,6 +214,152 @@ def list_queries(baseurl):
 
   except Exception as e:
     logging.error("**ERROR: queries() failed:")
+    logging.error("url: " + url)
+    logging.error(e)
+    return
+
+############################################################
+#
+# list_podcasts
+#
+def list_podcasts(baseurl):
+  """
+  Prints out all the list_podcasts in the database
+
+  Parameters
+  ----------
+  baseurl: baseurl for web service
+
+  Returns
+  -------
+  nothing
+  """
+
+  try:
+    #
+    # call the web service:
+    #
+    api = '/podcasts'
+    url = baseurl + api
+
+    # res = requests.get(url)
+    res = web_service_get(url)
+
+    #
+    # let's look at what we got back:
+    #
+    if res.status_code == 200: #success
+      pass
+    else:
+      # failed:
+      print("Failed with status code:", res.status_code)
+      print("url: " + url)
+      if res.status_code == 500:
+        # we'll have an error message
+        body = res.json()
+        print("Error message:", body)
+      #
+      return
+
+    #
+    # deserialize and extract list_podcasts:
+    #
+    body = res.json()
+
+    #
+    # let's map each row into a podcast object:
+    #
+    podcasts = []
+    for row in body:
+      podcast = Podcast(row)
+      podcasts.append(podcast)
+    #
+    # Now we can think OOP:
+    #
+    if len(podcasts) == 0:
+      print("no podcasts...")
+      return
+
+    for podcast in podcasts:
+      print(podcast.audiokey)
+    #
+    return
+
+  except Exception as e:
+    logging.error("**ERROR: podcasts() failed:")
+    logging.error("url: " + url)
+    logging.error(e)
+    return
+
+############################################################
+#
+# list_articles
+#
+def list_articles(baseurl):
+  """
+  Prints out all the list_articles in the database
+
+  Parameters
+  ----------
+  baseurl: baseurl for web service
+
+  Returns
+  -------
+  nothing
+  """
+
+  try:
+    #
+    # call the web service:
+    #
+    api = '/articles'
+    url = baseurl + api
+
+    # res = requests.get(url)
+    res = web_service_get(url)
+
+    #
+    # let's look at what we got back:
+    #
+    if res.status_code == 200: #success
+      pass
+    else:
+      # failed:
+      print("Failed with status code:", res.status_code)
+      print("url: " + url)
+      if res.status_code == 500:
+        # we'll have an error message
+        body = res.json()
+        print("Error message:", body)
+      #
+      return
+
+    #
+    # deserialize and extract list_articles:
+    #
+    body = res.json()
+
+    #
+    # let's map each row into a article object:
+    #
+    articles = []
+    for row in body:
+      article = Article(row)
+      articles.append(article)
+    #
+    # Now we can think OOP:
+    #
+    if len(articles) == 0:
+      print("no articles...")
+      return
+
+    for article in articles:
+      print(article.scriptkey)
+    #
+    return
+
+  except Exception as e:
+    logging.error("**ERROR: articles() failed:")
     logging.error("url: " + url)
     logging.error(e)
     return
@@ -412,17 +569,23 @@ try:
     if cmd == 1:
       list_queries(baseurl)
     elif cmd == 2:
-      # list_audio_files(baseurl)
+      list_podcasts(baseurl)
       pass
     elif cmd == 3:
-      # list_bucket_keys(baseurl)
+      list_articles(baseurl)
       pass
     elif cmd == 4:
       reset_database(baseurl)
     elif cmd == 5:
-      fetch_articles(baseurl)
+      # fetch_and_generate(baseurl)
+      pass
     elif cmd == 6:
+      fetch_articles(baseurl)
+    elif cmd == 7:
       summarize(baseurl)
+    elif cmd == 8:
+      # make_podcast(baseurl)
+      pass
     else:
       print("** Unknown command, try again...")
     #
