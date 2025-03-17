@@ -23,12 +23,12 @@ ALTER TABLE queries AUTO_INCREMENT = 10001; -- starting value
 CREATE TABLE articles
 (
     articleid      int not null AUTO_INCREMENT,
+    url             varchar(256) not null,
     headline       varchar(128) not null,
     querytext    varchar(128) not null,
     queryid    int not null,
     PRIMARY KEY (articleid),
     FOREIGN KEY (queryid) REFERENCES queries(queryid)
 );
-
 
 ALTER TABLE articles AUTO_INCREMENT = 20001;
