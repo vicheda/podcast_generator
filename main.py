@@ -112,7 +112,6 @@ def prompt():
     print("   2 => list audio files")
     print("   3 => list bucket keys")
     print("   4 => reset database")
-    
     print("   5 => get articles")
     print("   6 => summarize articles")
     print("   7 => make podcast")
