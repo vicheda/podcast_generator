@@ -3,8 +3,6 @@
 # 
 
 import requests
-import jsons
-
 import uuid
 import pathlib
 import logging
@@ -16,7 +14,20 @@ import time
 from configparser import ConfigParser
 from fetch_article import fetch_guardian_articles
 from summarize import summarize_articles
-from reset_database import reset
+
+
+############################################################
+#
+# classes
+#
+class Query:
+
+  def __init__(self, row):
+    self.queryid = row[0]
+    self.querytext = row[1]
+    self.status = row[2]
+
+
 ###################################################################
 #
 # web_service_get
@@ -125,10 +136,219 @@ def prompt():
 
 
 ############################################################
+#
+# list_queries
+#
+def list_queries(baseurl):
+  """
+  Prints out all the list_queries in the database
+
+  Parameters
+  ----------
+  baseurl: baseurl for web service
+
+  Returns
+  -------
+  nothing
+  """
+
+  try:
+    #
+    # call the web service:
+    #
+    api = '/queries'
+    url = baseurl + api
+
+    # res = requests.get(url)
+    res = web_service_get(url)
+
+    #
+    # let's look at what we got back:
+    #
+    if res.status_code == 200: #success
+      pass
+    else:
+      # failed:
+      print("Failed with status code:", res.status_code)
+      print("url: " + url)
+      if res.status_code == 500:
+        # we'll have an error message
+        body = res.json()
+        print("Error message:", body)
+      #
+      return
+
+    #
+    # deserialize and extract list_queries:
+    #
+    body = res.json()
+
+    #
+    # let's map each row into a Query object:
+    #
+    queries = []
+    for row in body:
+      query = Query(row)
+      queries.append(query)
+    #
+    # Now we can think OOP:
+    #
+    if len(queries) == 0:
+      print("no queries...")
+      return
+
+    for query in queries:
+      print(query.queryid)
+      print(" ", query.querytext)
+      print(" ", query.status)
+    #
+    return
+
+  except Exception as e:
+    logging.error("**ERROR: queries() failed:")
+    logging.error("url: " + url)
+    logging.error(e)
+    return
+
+############################################################
+#
+# reset
+#
+def reset_database(baseurl):
+  """
+  Resets the database back to initial state.
+
+  Parameters
+  ----------
+  baseurl: baseurl for web service
+
+  Returns
+  -------
+  nothing
+  """
+
+  try:
+    #
+    # call the web service:
+    #
+    api = '/reset'
+    url = baseurl + api
+
+    res = requests.delete(url)
+
+    #
+    # let's look at what we got back:
+    #
+    if res.status_code == 200: #success
+      pass
+    else:
+      # failed:
+      print("Failed with status code:", res.status_code)
+      print("url: " + url)
+      if res.status_code == 500:
+        # we'll have an error message
+        body = res.json()
+        print("Error message:", body)
+      #
+      return
+
+    #
+    # deserialize and print message
+    #
+    body = res.json()
+
+    msg = body
+
+    print(msg)
+    return
+
+  except Exception as e:
+    logging.error("**ERROR: reset() failed:")
+    logging.error("url: " + url)
+    logging.error(e)
+    return
+
+############################################################
+#
+# fetch_articles
+#
+def fetch_articles(baseurl):
+  """
+  Fetches articles from the guardian api.
+
+  Parameters
+  ----------
+  baseurl: baseurl for web service
+  
+  Returns
+  -------
+  nothing
+  """
+  try:
+    query = input("Enter a query (e.g. technology, climate,...)> ")
+    if query.isdigit():
+      print("**ERROR: Invalid query. Please enter a string.")
+      return
+    
+    # get articles
+    articles = fetch_guardian_articles(query)
+    print(articles)
+  except Exception as e:
+    logging.error("**ERROR: get_articles() failed:")
+    logging.error("url: " + url)
+    logging.error(e)
+    return
+
+############################################################
+#
+# summarize
+#
+def summarize(baseurl):
+  """
+  Summarizes the articles and turns them into a podcast script.
+
+  Parameters
+  ----------
+  baseurl: base URL for the web service
+  
+  Returns
+  -------
+  nothing
+  """
+  try:
+    queryid = input("Enter a query ID> ")
+
+    if not queryid.isdigit():
+      print("**ERROR: Invalid query ID. Please enter a numeric value.")
+      return
+
+    url = f"{baseurl}/summarize/{queryid}"
+    res = web_service_get(url)
+
+    if res is None:
+      print("**ERROR: No response from the web service.")
+      return
+
+    if res.status_code == 200:
+      print("Summary successfully generated:")
+      print(res.json())
+    else:
+      print(f"**ERROR: Failed with status code {res.status_code}")
+      print("URL:", url)
+      if res.status_code == 500:
+        print("Error message:", res.json())
+
+  except Exception as e:
+    logging.error("**ERROR: summarize() failed:")
+    logging.error(f"URL: {url}")
+    logging.error(str(e))
+    return
+
+############################################################
 # main
 #
 try:
-  print('** Welcome to BenfordApp **')
+  print('** ⭐ Welcome to Amazing Podcast ⭐ **')
   print()
 
   # eliminate traceback so we just get error message:
@@ -137,7 +357,7 @@ try:
   #
   # what config file should we use for this session?
   #
-  config_file = 'benfordapp-client-config.ini'
+  config_file = 'podcast-client-config.ini'
 
   print("Config file to use for this session?")
   print("Press ENTER to use default, or")
@@ -190,7 +410,19 @@ try:
   while cmd != 0:
     #
     if cmd == 1:
-        fetch_guardian_articles('technology')
+      list_queries(baseurl)
+    elif cmd == 2:
+      # list_audio_files(baseurl)
+      pass
+    elif cmd == 3:
+      # list_bucket_keys(baseurl)
+      pass
+    elif cmd == 4:
+      reset_database(baseurl)
+    elif cmd == 5:
+      fetch_articles(baseurl)
+    elif cmd == 6:
+      summarize(baseurl)
     else:
       print("** Unknown command, try again...")
     #
