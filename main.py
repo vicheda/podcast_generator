@@ -12,7 +12,6 @@ import base64
 import time
 
 from configparser import ConfigParser
-from fetch_article import fetch_guardian_articles
 from summarize import summarize_articles
 
 
@@ -113,6 +112,7 @@ def prompt():
     print("   2 => list audio files")
     print("   3 => list bucket keys")
     print("   4 => reset database")
+    
     print("   5 => get articles")
     print("   6 => summarize articles")
     print("   7 => make podcast")
@@ -293,11 +293,9 @@ def fetch_articles(baseurl):
     
     # get articles
     url = baseurl + "/fetch" + "/" + query
-    res = requests.post(url)
-    
+    res = requests.post(url, json={})
     body = res.json()
-    print(body)
-    
+
   except Exception as e:
     logging.error("**ERROR: get_articles() failed:")
     logging.error("url: " + url)
@@ -323,12 +321,12 @@ def summarize(baseurl):
   try:
     queryid = input("Enter a query ID> ")
 
-    # if not queryid.isdigit():
-    #   print("**ERROR: Invalid query ID. Please enter a numeric value.")
-    #   return
+    if not queryid.isdigit():
+      print("**ERROR: Invalid query ID. Please enter a numeric value.")
+      return
 
     url = f"{baseurl}/summarize/{int(queryid)}"
-    res = requests.post(url)
+    res = requests.post(url, json={})
 
     if res is None:
       print("**ERROR: No response from the web service.")
