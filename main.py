@@ -12,8 +12,6 @@ import base64
 import time
 
 from configparser import ConfigParser
-from summarize import summarize_articles
-
 
 ############################################################
 #
