@@ -12,9 +12,9 @@ CREATE TABLE queries
     queryid           int not null AUTO_INCREMENT,
     querytext         varchar(256) not null,
     status            varchar(256) not null,  -- uploaded, completed, error, processing...
-    textkey           varchar(256) not null,
-    scriptkey         varchar(256) not null,
-    audiokey          varchar(256) not null,  -- results filename in S3 bucket
+    textkey           varchar(256) not null DEFAULT '',
+    scriptkey         varchar(256) not null DEFAULT '',
+    audiokey          varchar(256) not null DEFAULT '',  -- results filename in S3 bucket
     PRIMARY KEY (queryid)
 );
 
