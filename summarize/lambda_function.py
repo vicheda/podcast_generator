@@ -55,17 +55,37 @@ def lambda_handler(event, context):
         
         print("queryid:", queryid)
         print("Getting textkey from database")
-        sql = "SELECT querytext, status, textkey from queries where queryid = %s;"
+        sql = "SELECT querytext, status, textkey, scriptkey from queries where queryid = %s;"
 
         row = datatier.retrieve_one_row(dbConn, sql, [queryid])
         
         querytext = row[0]
         status = row[1]
         textkey = row[2]
+        scriptkey = row[3]
 
         print("querytext:", querytext)
         print("status:", status)
         print("textkey:", textkey)
+        print("scriptkey:", scriptkey)
+
+        if status not in ["generated script", "gathered articles"]:
+            return {
+            'statusCode': 400,
+            'body': json.dumps({"error": "No articles content available, status: " + status})
+            }
+        if status == "generated script":
+            print("Script already generated")
+            script_local_file = "/tmp/script.txt"
+            bucket.download_file(scriptkey, script_local_file)
+
+            infile = open(script_local_file, "r")
+            script = infile.read()
+            infile.close()
+            return {
+            'statusCode': 200,
+            'body': json.dumps({"scriptkey": scriptkey, "script": script})
+            }
         
         prompt_local_filename = "/tmp/combinedarticles.txt"
         #
@@ -133,11 +153,11 @@ def lambda_handler(event, context):
 
         print ("Updating database with podcast script key and new status")
         sql = "UPDATE queries SET status = %s, scriptkey = %s WHERE queryid = %s;"
-        datatier.perform_action(dbConn, sql, ["genereated script", scriptkey, queryid])
+        datatier.update_row(dbConn, sql, ["generated script", scriptkey, queryid])
 
         return {
             'statusCode': 200,
-            'body': json.dumps(res_text)
+            'body': json.dumps({"scriptkey": scriptkey, "script": res_text})
         }
     
     except Exception as e:
