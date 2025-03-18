@@ -153,7 +153,7 @@ def lambda_handler(event, context):
 
         print ("Updating database with podcast script key and new status")
         sql = "UPDATE queries SET status = %s, scriptkey = %s WHERE queryid = %s;"
-        datatier.update_row(dbConn, sql, ["generated script", scriptkey, queryid])
+        datatier.perform_action(dbConn, sql, ["generated script", scriptkey, queryid])
 
         return {
             'statusCode': 200,
