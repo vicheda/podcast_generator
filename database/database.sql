@@ -9,12 +9,12 @@ DROP TABLE IF EXISTS articles;
 
 CREATE TABLE queries
 (
-    queryid           int not null AUTO_INCREMENT,
-    querytext         varchar(256) not null,
+    queryid           int not null AUTO_INCREMENT, -- unique identifier for each request.
+    querytext         varchar(256) not null, -- user’s search query (i.e. “Technology, Coffee, etc.”)
     status            varchar(256) not null,  -- uploaded, completed, error, processing...
-    textkey           varchar(256) not null DEFAULT '',
-    scriptkey         varchar(256) not null DEFAULT '',
-    audiokey          varchar(256) not null DEFAULT '',  -- results filename in S3 bucket
+    textkey           varchar(256) not null DEFAULT '', -- S3 bucket key for the combined article content .txt file
+    scriptkey         varchar(256) not null DEFAULT '', -- S3 bucket key for the generated podcast script .txt file (the summarize of all articled fetched from the Guardian API)
+    audiokey          varchar(256) not null DEFAULT '',  -- S3 bucket key for the generated audio file .mp3
     PRIMARY KEY (queryid)
 );
 
