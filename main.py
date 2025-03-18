@@ -23,6 +23,9 @@ class Query:
     self.queryid = row[0]
     self.querytext = row[1]
     self.status = row[2]
+    self.textkey = row[3]
+    self.scriptkey = row[4]
+    self.audiokey = row[5]
 
 class Podcast:
 
@@ -33,7 +36,8 @@ class Article:
 
   def __init__(self, row):
     self.articleid = row[0]
-    self.headline = row[1]
+    self.url = row[1]
+    self.headline = row[2]
 
 
 
@@ -122,10 +126,10 @@ def prompt():
     print("   2 => list podcasts")
     print("   3 => list articles")
     print("   4 => reset database")
-    print("   5 => fetch and generate podcast")
+    print("   5 => fetch and generate")
     print("   6 => fetch articles")
     print("   7 => summarize articles")
-    print("   8 => make podcast")
+    print("   8 => generate podcast")
 
     cmd = input()
 
@@ -163,6 +167,7 @@ def list_queries(baseurl):
   """
 
   try:
+    print(">> Here are all of the queries that were made:")
     #
     # call the web service:
     #
@@ -209,8 +214,11 @@ def list_queries(baseurl):
 
     for query in queries:
       print(query.queryid)
-      print(" ", query.querytext)
-      print(" ", query.status)
+      print("\tQuery: ", query.querytext)
+      print("\tStatus: ", query.status)
+      print("\tBucket key: ", query.textkey)
+      print("\tScript key: ", query.scriptkey)
+      print("\tAudio key:", query.audiokey)
     #
     return
 
@@ -311,6 +319,7 @@ def list_articles(baseurl):
   """
 
   try:
+    print(">> Articles that were fetched to generate podcasts 📰:")
     #
     # call the web service:
     #
@@ -340,7 +349,6 @@ def list_articles(baseurl):
     # deserialize and extract list_articles:
     #
     body = res.json()
-
     #
     # let's map each row into a article object:
     #
@@ -356,8 +364,9 @@ def list_articles(baseurl):
       return
 
     for article in articles:
-      print(" ", article.articleid)
-      print(" ", article.headline)
+      print(article.articleid)
+      print("\tTitle: ", article.headline)
+      print("\tArticle URL: ", article.url)
     #
     return
 
@@ -448,6 +457,9 @@ def fetch_articles(baseurl):
       print("**ERROR: Invalid query. Please enter a string.")
       return
     
+    print("Fetching articles for query:", query)
+    print("This may take a few seconds...")
+
     # get articles
     url = baseurl + "/fetch" + "/" + query
     res = requests.post(url, json={})
@@ -496,6 +508,9 @@ def summarize(baseurl):
       print("**ERROR: Invalid query ID. Please enter a numeric value.")
       return
 
+    print("Generating podcast script for query ID:", queryid)
+    print("This may take a few seconds...")
+
     url = f"{baseurl}/summarize/{int(queryid)}"
     res = requests.post(url, json={})
 
@@ -504,19 +519,81 @@ def summarize(baseurl):
       return
 
     if res.status_code == 200:
-      print("Summary successfully generated")
-      print(res.json())
+      print("Summary successfully generated for query ID: ", queryid)
     else:
       print(f"**ERROR: Failed with status code {res.status_code}")
       print("URL:", url)
       if res.status_code == 500:
         print("Error message:", res.json())
+    
+    # if user wants to read the summary
+    read = input("Would you like to read the summary? (y/n)> ")
+    if read.lower() == "y":
+      body = res.json()
+      print(body)
 
   except Exception as e:
     logging.error("**ERROR: summarize() failed:")
     logging.error(f"URL: {url}")
     logging.error(str(e))
     return
+
+
+############################################################
+#
+# generate_podcast
+#
+import requests
+import base64
+import os
+
+def generate_podcast(baseurl):
+  try:
+      queryid = input("Enter a query ID> ")
+
+      if not queryid.isdigit():
+          print("**ERROR: Invalid query ID. Please enter a numeric value.")
+          return
+      
+      url = f"{baseurl}/podcast/{int(queryid)}"
+      res = requests.post(url, json={})
+      
+      if res.status_code != 200:
+        print(f"**ERROR: Failed with status code {res.status_code}")
+        print("URL:", url)
+        if res.status_code == 500:
+            print("Error message:", res.json())
+        return
+      
+      data = res.json()
+      print(data)
+      audiokey = data.get("audiokey")
+      audiodata = data.get("audiodata")
+      
+      if not audiokey or not audiodata:
+          print("**ERROR: Missing audio data in response.")
+          return
+      
+      audio_bytes = base64.b64decode(audiodata)
+      filename = os.path.join(os.getcwd(), audiokey.split('/')[-1])
+      
+      with open(filename, "wb") as audio_file:
+          audio_file.write(audio_bytes)
+      
+      print(f"Podcast saved as {filename}")
+
+  except Exception as e:
+    logging.error("**ERROR: generate_podcast() failed:")
+    logging.error(f"URL: {url}")
+    logging.error(str(e))
+    return
+
+############################################################
+#
+# fetch_and_generate
+#
+def fetch_and_generate(baseurl):
+  pass
 
 ############################################################
 # main
@@ -586,23 +663,20 @@ try:
     if cmd == 1:
       list_queries(baseurl)
     elif cmd == 2:
-      list_podcasts(baseurl)
+      # list_podcasts(baseurl)
       pass
     elif cmd == 3:
       list_articles(baseurl)
-      pass
     elif cmd == 4:
       reset_database(baseurl)
     elif cmd == 5:
-      # fetch_and_generate(baseurl)
-      pass
+      fetch_and_generate(baseurl)
     elif cmd == 6:
       fetch_articles(baseurl)
     elif cmd == 7:
       summarize(baseurl)
     elif cmd == 8:
-      # make_podcast(baseurl)
-      pass
+      generate_podcast(baseurl)
     else:
       print("** Unknown command, try again...")
     #

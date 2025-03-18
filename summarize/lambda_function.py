@@ -84,7 +84,8 @@ def lambda_handler(event, context):
             }
 
         body_to_llm = {
-            "prompt": f"Summarize the following articles and turn them into a podcast script:\n{prompt}",
+            # improved prompt
+            "prompt": f"Generate a podcast script summarizing the provided articles in a natural and engaging style. The script should flow seamlessly without including meta text like 'Here's the podcast script' or section headers such as 'Segment 1'. Instead, transition smoothly between topics as a natural conversation or narration would. Keep it to 250 words max and professional, engaging, and structured without explicit labels\n{prompt}",
             "max_gen_len": 512,
             "temperature": 0.5,
             "top_p": 0.9
@@ -132,7 +133,7 @@ def lambda_handler(event, context):
 
         print ("Updating database with podcast script key and new status")
         sql = "UPDATE queries SET status = %s, scriptkey = %s WHERE queryid = %s;"
-        datatier.update_row(dbConn, sql, ["genereated script", scriptkey, queryid])
+        datatier.perform_action(dbConn, sql, ["genereated script", scriptkey, queryid])
 
         return {
             'statusCode': 200,
