@@ -95,9 +95,19 @@ def lambda_handler(event, context):
         
         print("queryid:", queryid)
 
+        article_headlines = []
+        for article in articles[:6]:
+            sql = """
+            INSERT INTO articles(url, headline, querytext, queryid)
+                      VALUES(%s, %s, %s, %s);
+            """
+            datatier.perform_action(dbConn, sql, [article['id'], article['fields']['headline'], query, queryid])
+            print("Inserted article into database:", article['id'])
+            article_headlines.append(article['fields']['headline'])
+
         return {
             'statusCode': 200,
-            'body': json.dumps(queryid)
+            'body': json.dumps({"queryid": queryid, "article_headlines": article_headlines})
         }
     except Exception as err:
         print("**ERROR**")
