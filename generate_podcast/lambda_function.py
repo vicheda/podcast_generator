@@ -127,9 +127,10 @@ def lambda_handler(event, context):
         sql = "UPDATE queries SET status = %s, audiokey = %s WHERE queryid = %s;"
         datatier.perform_action(dbConn, sql, ["generated audio", audiokey, queryid])
 
+        
         return {
             "statusCode": 200,
-            "body": json.dumps({"audiokey": audiokey, "audiodata": datastr})
+            "body": json.dumps({"audiokey": audiokey, "audiodata": datastr, "querytext": querytext})
         }
 
     except Exception as e:

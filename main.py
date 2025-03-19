@@ -26,12 +26,6 @@ class Query:
     self.textkey = row[3]
     self.scriptkey = row[4]
     self.audiokey = row[5]
-
-class Podcast:
-
-  def __init__(self, row):
-    self.audiokey = row[0]
-
 class Article:
 
   def __init__(self, row):
@@ -123,13 +117,12 @@ def prompt():
     print(">> Enter a command:")
     print("   0 => end")
     print("   1 => list queries")
-    print("   2 => list podcasts")
-    print("   3 => list articles")
-    print("   4 => reset database")
-    print("   5 => fetch and generate")
-    print("   6 => fetch articles")
-    print("   7 => summarize articles")
-    print("   8 => generate podcast")
+    print("   2 => list articles")
+    print("   3 => reset database")
+    print("   4 => fetch articles")
+    print("   5 => summarize articles")
+    print("   6 => generate podcast")
+    print("   7 => fetch and generate")
 
     cmd = input()
 
@@ -519,18 +512,12 @@ def summarize(baseurl):
       return
 
     if res.status_code == 200:
-      print("Summary successfully generated for query ID: ", queryid)
+      print("Summary successfully generated")
     else:
       print(f"**ERROR: Failed with status code {res.status_code}")
       print("URL:", url)
       if res.status_code == 500:
         print("Error message:", res.json())
-    
-    # if user wants to read the summary
-    read = input("Would you like to read the summary? (y/n)> ")
-    if read.lower() == "y":
-      body = res.json()
-      print(body)
 
   except Exception as e:
     logging.error("**ERROR: summarize() failed:")
@@ -559,28 +546,25 @@ def generate_podcast(baseurl):
       res = requests.post(url, json={})
       
       if res.status_code != 200:
-        print(f"**ERROR: Failed with status code {res.status_code}")
-        print("URL:", url)
-        if res.status_code == 500:
-            print("Error message:", res.json())
+        print("no audio found...")
         return
       
       data = res.json()
-      print(data)
       audiokey = data.get("audiokey")
       audiodata = data.get("audiodata")
-      
+      filename = data.get("querytext") + ".mp3"
+
       if not audiokey or not audiodata:
           print("**ERROR: Missing audio data in response.")
           return
       
       audio_bytes = base64.b64decode(audiodata)
-      filename = os.path.join(os.getcwd(), audiokey.split('/')[-1])
       
       with open(filename, "wb") as audio_file:
           audio_file.write(audio_bytes)
       
-      print(f"Podcast saved as {filename}")
+      print(f"Podcast generated and downloaded successfully as {filename}")
+
 
   except Exception as e:
     logging.error("**ERROR: generate_podcast() failed:")
@@ -663,20 +647,17 @@ try:
     if cmd == 1:
       list_queries(baseurl)
     elif cmd == 2:
-      # list_podcasts(baseurl)
-      pass
-    elif cmd == 3:
       list_articles(baseurl)
-    elif cmd == 4:
+    elif cmd == 3:
       reset_database(baseurl)
-    elif cmd == 5:
-      fetch_and_generate(baseurl)
-    elif cmd == 6:
+    elif cmd == 4:
       fetch_articles(baseurl)
-    elif cmd == 7:
+    elif cmd == 5:
       summarize(baseurl)
-    elif cmd == 8:
+    elif cmd == 6:
       generate_podcast(baseurl)
+    elif cmd == 7:
+      fetch_and_generate(baseurl)
     else:
       print("** Unknown command, try again...")
     #
