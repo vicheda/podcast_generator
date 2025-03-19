@@ -141,6 +141,43 @@ def prompt():
     print("**ERROR")
     return -1
 
+############################################################
+#
+# helpers
+#
+def make_post_request(url, json_data={}):
+    """
+    Helper function to make a POST request and return the response
+    """
+    try:
+        res = requests.post(url, json=json_data)
+        if res is None:
+            print("**ERROR: No response from server.")
+            return None
+        
+        return res
+    
+    except Exception as e:
+        logging.error(f"**ERROR: Request failed: {str(e)}")
+        return None
+
+def validate_query(query):
+    """
+    Validates that the query is a string and not numeric
+    """
+    if query.isdigit():
+        print("**ERROR: Invalid query. Please enter a string.")
+        return False
+    return True
+
+def validate_queryid(queryid):
+    """
+    Validates that the query ID is a number
+    """
+    if not queryid.isdigit():
+        print("**ERROR: Invalid query ID. Please enter a numeric value.")
+        return False
+    return True
 
 ############################################################
 #
@@ -359,7 +396,7 @@ def list_articles(baseurl):
     for article in articles:
       print(article.articleid)
       print("\tTitle: ", article.headline)
-      print("\tArticle URL: ", article.url)
+      print("\tURL: ", article.url)
     #
     return
 
@@ -445,33 +482,23 @@ def fetch_articles(baseurl):
   """
   try:
     query = input("Enter a query (e.g. technology, climate,...)> ")
-
-    if query.isdigit():
-      print("**ERROR: Invalid query. Please enter a string.")
+    
+    if not validate_query(query):
       return
     
-    print("Fetching articles for query:", query)
-    print("This may take a few seconds...")
+    print(f"Fetching articles for query: {query}\n(This may take a few seconds...)")
+    url = f"{baseurl}/fetch/{query}"
+    
+    # make request and return response
+    res = make_post_request(url)
 
-    # get articles
-    url = baseurl + "/fetch" + "/" + query
-    res = requests.post(url, json={})
-
-    if res.status_code == 200: #success
-      pass
+    if res and res.status_code == 200:
+        print("Articles successfully fetched")
     else:
-      # failed:
-      print("Failed with status code:", res.status_code)
-      print("url: " + url)
-      if res.status_code == 500:
-        # we'll have an error message
-        body = res.json()
-        print("Error message:", body)
-      #
-      return
-    
-    body = res.json()
-    print("Articles successfully fetched")
+        print(f"Failed with status code: {res.status_code}\nURL: {url}")
+        if res.status_code == 500:
+            print("Error message:", res.json())
+
   except Exception as e:
     logging.error("**ERROR: get_articles() failed:")
     logging.error("url: " + url)
@@ -497,27 +524,21 @@ def summarize(baseurl):
   try:
     queryid = input("Enter a query ID> ")
 
-    if not queryid.isdigit():
-      print("**ERROR: Invalid query ID. Please enter a numeric value.")
+    if not validate_queryid(queryid):
       return
 
-    print("Generating podcast script for query ID:", queryid)
-    print("This may take a few seconds...")
+    print(f"Generating podcast script for query ID: {queryid}\n(This may take a few seconds...)")
+    url = f"{baseurl}/summarize/{queryid}"
+    
+    # make request and return response
+    res = make_post_request(url)
 
-    url = f"{baseurl}/summarize/{int(queryid)}"
-    res = requests.post(url, json={})
-
-    if res is None:
-      print("**ERROR: No response from the web service.")
-      return
-
-    if res.status_code == 200:
-      print("Summary successfully generated")
+    if res and res.status_code == 200:
+        print("Summary successfully generated")
     else:
-      print(f"**ERROR: Failed with status code {res.status_code}")
-      print("URL:", url)
-      if res.status_code == 500:
-        print("Error message:", res.json())
+        print(f"**ERROR: Failed with status code {res.status_code}\nURL: {url}")
+        if res.status_code == 500:
+            print("Error message:", res.json())
 
   except Exception as e:
     logging.error("**ERROR: summarize() failed:")
@@ -536,35 +557,30 @@ import os
 
 def generate_podcast(baseurl):
   try:
-      queryid = input("Enter a query ID> ")
+    queryid = input("Enter a query ID> ")
 
-      if not queryid.isdigit():
-          print("**ERROR: Invalid query ID. Please enter a numeric value.")
-          return
-      
-      url = f"{baseurl}/podcast/{int(queryid)}"
-      res = requests.post(url, json={})
-      
-      if res.status_code != 200:
-        print("no audio found...")
+    if not validate_queryid(queryid):
         return
-      
-      data = res.json()
-      audiokey = data.get("audiokey")
-      audiodata = data.get("audiodata")
-      filename = data.get("querytext") + ".mp3"
+    
+    url = f"{baseurl}/podcast/{queryid}"
+    res = make_post_request(url)
 
-      if not audiokey or not audiodata:
-          print("**ERROR: Missing audio data in response.")
-          return
-      
-      audio_bytes = base64.b64decode(audiodata)
-      
-      with open(filename, "wb") as audio_file:
-          audio_file.write(audio_bytes)
-      
-      print(f"Podcast generated and downloaded successfully as {filename}")
+    if res and res.status_code == 200:
+        data = res.json()
+        audiokey = data.get("audiokey")
+        audiodata = data.get("audiodata")
+        filename = data.get("querytext") + ".mp3"
 
+        if not audiokey or not audiodata:
+            print("**ERROR: Missing audio data in response.")
+            return
+        
+        with open(filename, "wb") as audio_file:
+            audio_file.write(base64.b64decode(audiodata))
+        
+        print(f"Podcast generated and downloaded successfully as {filename}")
+    else:
+        print("no audio found...")
 
   except Exception as e:
     logging.error("**ERROR: generate_podcast() failed:")
@@ -577,7 +593,64 @@ def generate_podcast(baseurl):
 # fetch_and_generate
 #
 def fetch_and_generate(baseurl):
-  pass
+  
+  try:
+    query = input("Enter a query (e.g. technology, climate,...)> ")
+
+    if not validate_query(query):
+        return
+
+    print(f"Fetching articles for query: {query}\n(This may take a few seconds...)\n")
+    url = f"{baseurl}/fetch/{query}"
+    
+    res = make_post_request(url)
+    if not res or res.status_code != 200:
+        print(f"Failed with status code: {res.status_code}\nURL: {url}")
+        if res.status_code == 500:
+            print("Error message:", res.json())
+        return
+
+    body = res.json()
+    queryid = body.get("queryid")
+    print(f"Generating podcast script for query ID: {queryid}\n(This may take a few seconds...)\n")
+
+    # Summarize
+    url = f"{baseurl}/summarize/{queryid}"
+    res = make_post_request(url)
+    if not res or res.status_code != 200:
+        print(f"**ERROR: Failed with status code {res.status_code}\nURL: {url}")
+        if res.status_code == 500:
+            print("Error message:", res.json())
+        return
+
+    print("Summary successfully generated :)")
+
+    # Generate Podcast
+    url = f"{baseurl}/podcast/{queryid}"
+    res = make_post_request(url)
+    if not res or res.status_code != 200:
+        print("No audio found...")
+        return
+    
+    data = res.json()
+    audiokey = data.get("audiokey")
+    audiodata = data.get("audiodata")
+    filename = data.get("querytext") + ".mp3"
+
+    if not audiokey or not audiodata:
+        print("**ERROR: Missing audio data in response.")
+        return
+
+    with open(filename, "wb") as audio_file:
+        audio_file.write(base64.b64decode(audiodata))
+
+    print(f"Podcast generated and downloaded successfully as {filename}")
+
+  except Exception as e:
+    logging.error("**ERROR: fetch_and_generate() failed:")
+    logging.error(f"URL: {url}")
+    logging.error(str(e))
+    return
 
 ############################################################
 # main
