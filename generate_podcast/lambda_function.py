@@ -79,7 +79,7 @@ def lambda_handler(event, context):
 
             return {
             'statusCode': 200,
-            "body": json.dumps({"audiokey": audiokey, "audiodata": datastr})
+            "body": json.dumps({"audiokey": audiokey, "audiodata": datastr, "querytext": querytext})
             }
         script_local_filename = "/tmp/script.txt"
         #
