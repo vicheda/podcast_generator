@@ -562,6 +562,7 @@ def generate_podcast(baseurl):
     if not validate_queryid(queryid):
         return
     
+    print(f"Generating podcast for query ID: {queryid}\n(This may take a few seconds...)")
     url = f"{baseurl}/podcast/{queryid}"
     res = make_post_request(url)
 
@@ -626,6 +627,7 @@ def fetch_and_generate(baseurl):
     print("Summary successfully generated :)")
 
     # Generate Podcast
+    print(f"Generating podcast for query ID: {queryid}\n(This may take a few seconds...)\n")
     url = f"{baseurl}/podcast/{queryid}"
     res = make_post_request(url)
     if not res or res.status_code != 200:
