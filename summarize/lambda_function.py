@@ -51,13 +51,22 @@ def lambda_handler(event, context):
         if "pathParameters" in event and 'queryid' in event["pathParameters"]:
             queryid = event["pathParameters"]['queryid']
         else:
-            raise Exception("requires queryid parameter in pathParameters in event")
+            return {
+            'statusCode': 400,
+            'body': json.dumps({"error": "requires queryid parameter in pathParameters in event"})
+            }
         
         print("queryid:", queryid)
         print("Getting textkey from database")
         sql = "SELECT querytext, status, textkey, scriptkey from queries where queryid = %s;"
 
         row = datatier.retrieve_one_row(dbConn, sql, [queryid])
+
+        if row == ():  # no such query
+            return {
+            'statusCode': 400,
+            'body': json.dumps({"error": "no such query" + queryid})
+            }
         
         querytext = row[0]
         status = row[1]
