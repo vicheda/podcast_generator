@@ -113,10 +113,7 @@ def lambda_handler(event, context):
             'body': json.dumps({"queryid": queryid, "article_headlines": article_headlines})
         }
     except Exception as err:
-        print("**ERROR**")
-        print(str(err))
-        
         return {
-        'statusCode': 500,
-        'body': json.dumps(str(err))
+            'statusCode': 500,
+            'body': json.dumps({"error": str(e)})
         }
