@@ -29,4 +29,6 @@ Each folder corresponds to a specific lambda function. Those lambda functions ar
 
 ### **🛑 Reset**
 - `DELETE /reset` – Reset stored data.
-
+  
+## Client Walkthrough
+![walkthrough](https://github.com/user-attachments/assets/4563e988-5cc1-4b43-8cc8-b5205a281408)
