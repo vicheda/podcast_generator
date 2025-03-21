@@ -51,6 +51,12 @@ def lambda_handler(event, context):
         sql = "SELECT querytext, status, scriptkey, audiokey from queries where queryid = %s;"
 
         row = datatier.retrieve_one_row(dbConn, sql, [queryid])
+
+        if row == ():
+            return {
+            'statusCode': 400,
+            'body': json.dumps({"error": "No script available"})
+            }
         
         querytext = row[0]
         status = row[1]
@@ -90,6 +96,12 @@ def lambda_handler(event, context):
         infile = open(script_local_filename, "r")
         script_text = infile.read()
         infile.close()
+
+        if script_text == "":
+            return {
+            'statusCode': 400,
+            'body': json.dumps({"error": "No script available"})
+            }
         
         # Convert text to speech using Polly
         response = polly_client.synthesize_speech(
