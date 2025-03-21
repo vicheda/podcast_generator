@@ -496,9 +496,9 @@ def fetch_articles(baseurl):
         print("Articles successfully fetched")
         data = res.json()
         queryid = data.get("queryid")
-        print("Your query id:", queryid)
+        print("Your query id:", queryid, "\n")
         article_headlines = data.get("article_headlines")
-        print ("/n We fetched the following articles:")
+        print ("We fetched the following articles: \n")
         for headline in article_headlines:
            print(headline)
     else:
