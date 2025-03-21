@@ -43,7 +43,10 @@ def lambda_handler(event, context):
         if "pathParameters" in event and 'query' in event["pathParameters"]:
             query = event["pathParameters"]['query']
         else:
-            raise Exception("requires query parameter in pathParameters in event")
+            return {
+            'statusCode': 400,
+            'body': json.dumps({"error": "requires query parameter in pathParameters in event"})
+            }
 
         print("query:", query)
         print("Sending api request to Guardian...")
@@ -64,7 +67,7 @@ def lambda_handler(event, context):
                 print('No articles found.')
                 return {
                     'statusCode': 400,
-                    'body': json.dumps('No articles found')
+                    'body': json.dumps({"error": f'this query {query} generates no Guardian articles'})
                 }
         else:
             raise Exception("No articles found")
