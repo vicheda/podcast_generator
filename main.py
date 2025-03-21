@@ -494,6 +494,13 @@ def fetch_articles(baseurl):
 
     if res and res.status_code == 200:
         print("Articles successfully fetched")
+        data = res.json()
+        queryid = data.get("queryid")
+        print("Your query id:", queryid)
+        article_headlines = data.get("article_headlines")
+        print ("/n We fetched the following articles:")
+        for headline in article_headlines:
+           print(headline)
     else:
         print(f"Failed with status code: {res.status_code}\nURL: {url}")
         if res.status_code == 500:
@@ -535,6 +542,11 @@ def summarize(baseurl):
 
     if res and res.status_code == 200:
         print("Summary successfully generated")
+        data = res.json()
+        script = data.get("script")
+        answer = input("Do you want to read the generated script? (y/n)")
+        if answer == "y":
+          print (script)
     else:
         print(f"**ERROR: Failed with status code {res.status_code}\nURL: {url}")
         if res.status_code == 500:
